@@ -115,6 +115,25 @@ namespace SplitSnap.Controllers
             });
         }
 
+        [HttpDelete("{transaction_id}")]
+        public async Task<IActionResult> Delete(string transaction_id)
+        {
+            var userId = _jwtService.GetUserIdFromToken(HttpContext);
+            if (userId == null)
+                return Unauthorized(new { error = true, message = "unauthorized" });
+
+            var transaction = await _context.Transactions
+                .FirstOrDefaultAsync(t => t.TransactionId == transaction_id && t.UserId == userId);
+
+            if (transaction == null)
+                return NotFound(new { error = true, message = "Transaksi tidak ditemukan" });
+
+            _context.Transactions.Remove(transaction);
+            await _context.SaveChangesAsync();
+
+            return Ok(new { message = "Transaksi berhasil dihapus" });
+        }
+
         [HttpGet("chart")]
         public async Task<IActionResult> GetChartData(
             [FromQuery] string period = "week",
